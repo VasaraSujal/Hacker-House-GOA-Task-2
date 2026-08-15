@@ -1,0 +1,142 @@
+{
+  "metadata": {
+    "timestamp_utc": "2026-08-15T12:25:11.127601+00:00",
+    "note": "Isolated scale ingestions. Production hh_goa_rag index was not modified.",
+    "host": {
+      "total_ram_gib": 11.34,
+      "free_ram_gib_at_1k_start": 2.95,
+      "free_disk_gib_e": 71.36
+    }
+  },
+  "baseline_production_index": {
+    "status": "measured",
+    "query_records": 500,
+    "passages": 9989,
+    "chunks": 11478,
+    "qdrant_points": 11478,
+    "bm25_entries": 11478,
+    "bm25_file_bytes": 15574429,
+    "qdrant_volume_bytes": 622745957,
+    "embedding_dimension": 384,
+    "distance": "Cosine",
+    "unique_chunk_ids": 11478,
+    "unique_document_ids": 9989,
+    "duplicate_chunk_ids": 0,
+    "duplicate_text_hashes": 177,
+    "text_utf8_bytes": 6247674,
+    "languages": {"en": 5731, "hin": 5747}
+  },
+  "scales": [
+    {
+      "records_requested": 500,
+      "status": "measured_baseline",
+      "query_records": 500,
+      "chunks": 11478,
+      "qdrant_points": 11478,
+      "wall_s": null,
+      "peak_rss_mb": null,
+      "bm25_file_bytes": 15574429,
+      "chunks_per_s": null,
+      "note": "Existing production development index (not re-ingested in Stage 5)"
+    },
+    {
+      "records_requested": 1000,
+      "status": "measured",
+      "query_records": 1000,
+      "passages": 19975,
+      "chunks": 22573,
+      "qdrant_points": 22553,
+      "batches": 160,
+      "retries": 0,
+      "failed_batches": 0,
+      "wall_s": 701.01,
+      "embedding_s": 538.126,
+      "upsert_s": 15.418,
+      "bm25_s": 31.725,
+      "peak_rss_mb": 3328.5,
+      "bm25_file_bytes": 30361984,
+      "chunks_per_s": 32.2,
+      "records_per_s": 1.43,
+      "free_ram_gib_before": 2.95,
+      "free_disk_gib_before": 71.36,
+      "collection": "hh_goa_rag_scale_1000",
+      "dimension": 384,
+      "cleaned_up": true,
+      "note": "20 fewer Qdrant points than chunk emissions indicates deterministic ID collisions overwritten by upsert"
+    },
+    {
+      "records_requested": 10000,
+      "status": "skipped",
+      "reason": "insufficient free RAM for ~10000 records (free=2.17 GiB, estimated working set≈2.84 GiB)",
+      "free_ram_gib": 2.1744041442871094,
+      "free_disk_gib": 71.36336135864258
+    },
+    {
+      "records_requested": 50000,
+      "status": "skipped",
+      "reason": "Not attempted: 1K already peaked at 3.33 GiB RSS on an 11.34 GiB host; 50K refused by safety policy"
+    },
+    {
+      "records_requested": 100000,
+      "status": "skipped",
+      "reason": "Not attempted: exceeds safe local RAM/disk policy after measured 1K peak"
+    }
+  ],
+  "capacity_estimates": {
+    "basis": {
+      "chunks_per_record_measured": 22.573,
+      "raw_vector_bytes_per_chunk": 1536,
+      "text_bytes_per_chunk_measured": 544.3,
+      "bm25_bytes_per_chunk_measured_1k": 1345.0,
+      "ingest_chunks_per_s_measured": 32.2
+    },
+    "corpora": [
+      {
+        "corpus": "development_500_records",
+        "kind": "MEASURED",
+        "estimated_records": 500,
+        "estimated_chunks": 11478,
+        "raw_vector_gib": 0.0164,
+        "bm25_gib": 0.0145,
+        "qdrant_volume_gib_measured": 0.58
+      },
+      {
+        "corpus": "hindi_validation",
+        "kind": "ESTIMATE",
+        "estimated_records": 97941,
+        "estimated_chunks": 2210830,
+        "raw_vector_gib": 3.16,
+        "bm25_gib": 2.77,
+        "qdrant_estimated_low_gib": 5.5,
+        "qdrant_estimated_high_gib": 8.5,
+        "ingest_hours_at_32cps": 19.1
+      },
+      {
+        "corpus": "all_14_validation",
+        "kind": "ESTIMATE",
+        "estimated_records": 1371174,
+        "estimated_chunks": 30951620,
+        "raw_vector_gib": 44.3,
+        "bm25_gib": 38.7,
+        "qdrant_estimated_low_gib": 77,
+        "qdrant_estimated_high_gib": 118,
+        "ingest_hours_at_32cps": 267
+      },
+      {
+        "corpus": "full_55gb_snapshot_approx",
+        "kind": "ESTIMATE",
+        "estimated_records": 11000000,
+        "estimated_chunks": 248303000,
+        "raw_vector_gib": 355,
+        "bm25_gib": 311,
+        "qdrant_estimated_low_gib": 620,
+        "qdrant_estimated_high_gib": 950,
+        "ingest_hours_at_32cps": 2142
+      }
+    ],
+    "decision": {
+      "option": "D",
+      "summary": "Keep the measured Hindi validation subset (500 records / 11,478 chunks) as the submission index. Full MSMARCO-XI requires a larger machine or cloud vector store; local 11.34 GiB RAM and in-memory BM25 cannot safely hold the full corpus."
+    }
+  }
+}
