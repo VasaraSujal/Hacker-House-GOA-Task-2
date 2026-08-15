@@ -1,0 +1,41 @@
+{
+  "metadata": {
+    "timestamp_utc": "2026-08-15T10:01:17.512260+00:00",
+    "source_records": 50,
+    "query_count": 46,
+    "chunk_count": 1058,
+    "chunk_strategy": "sentence"
+  },
+  "models": [
+    {
+      "model": "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2",
+      "dimension": 384,
+      "parameter_memory_mib": 448.8134765625,
+      "load_ms": 23986.933100008173,
+      "document_embedding_ms": 27573.563800004194,
+      "mean_query_embedding_ms": 21.379804347500045,
+      "mean_exact_search_ms": 0.28475434753446555,
+      "recall_at_5": 0.5869565217391305,
+      "recall_at_10": 0.75,
+      "precision_at_5": 0.13043478260869568,
+      "mrr": 0.39376106984802633,
+      "ndcg_at_10": 0.48728528124869364,
+      "n_queries": 46
+    },
+    {
+      "model": "intfloat/multilingual-e5-small",
+      "dimension": 384,
+      "parameter_memory_mib": 448.8134765625,
+      "load_ms": 92872.54690000555,
+      "document_embedding_ms": 28339.46040000592,
+      "mean_query_embedding_ms": 18.551463042967953,
+      "mean_exact_search_ms": 0.18458913141132696,
+      "recall_at_5": 0.6630434782608695,
+      "recall_at_10": 0.9130434782608695,
+      "precision_at_5": 0.14782608695652175,
+      "mrr": 0.611338217764049,
+      "ndcg_at_10": 0.6787655700400624,
+      "n_queries": 46
+    }
+  ]
+}
