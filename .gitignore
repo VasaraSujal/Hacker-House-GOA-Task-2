@@ -42,3 +42,8 @@ hf_cache/
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Ephemeral local Stage 6 verification dumps
+benchmarks/stage6_*.txt
+benchmarks/stage6_container_voice.json
+
