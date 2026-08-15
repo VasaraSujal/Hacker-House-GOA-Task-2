@@ -1,0 +1,170 @@
+{
+  "metadata": {
+    "timestamp_utc": "2026-08-15T09:52:01.937686+00:00",
+    "query_count": 100,
+    "generation": "disabled with deterministic local refusal provider",
+    "reranker": "disabled via IdentityReranker",
+    "baseline_source": "E:\\Hackathons\\Hacker House GOA Task 2\\hh-goa-voice-rag\\benchmarks\\latency\\latency_report.json",
+    "recommended_parallel_retrieval": true
+  },
+  "before": {
+    "rag_core": {
+      "name": "rag_core_ms",
+      "n": 100,
+      "min_ms": 610.945,
+      "mean_ms": 1036.0836,
+      "median_ms": 1020.7855,
+      "p50_ms": 1020.7855,
+      "p70_ms": 1109.5382,
+      "p90_ms": 1387.2812000000001,
+      "p95_ms": 1437.1629,
+      "p100_ms": 2023.938,
+      "max_ms": 2023.938
+    },
+    "retrieval_wall": {
+      "name": "retrieval_wall_ms",
+      "n": 100,
+      "min_ms": 45.245,
+      "mean_ms": 98.91454000000002,
+      "median_ms": 97.6565,
+      "p50_ms": 97.6565,
+      "p70_ms": 114.7298,
+      "p90_ms": 130.49380000000002,
+      "p95_ms": 141.97519999999997,
+      "p100_ms": 188.316,
+      "max_ms": 188.316
+    },
+    "reranking": {
+      "name": "reranking_ms",
+      "n": 100,
+      "min_ms": 549.861,
+      "mean_ms": 936.5149100000001,
+      "median_ms": 917.4445,
+      "p50_ms": 917.4445,
+      "p70_ms": 992.3215,
+      "p90_ms": 1270.9469,
+      "p95_ms": 1313.5093499999998,
+      "p100_ms": 1881.393,
+      "max_ms": 1881.393
+    },
+    "generation": {
+      "name": "generation_ms",
+      "n": 100,
+      "min_ms": 2286.323,
+      "mean_ms": 5219.425929999999,
+      "median_ms": 4299.344,
+      "p50_ms": 4299.344,
+      "p70_ms": 5410.992,
+      "p90_ms": 9468.27850000001,
+      "p95_ms": 11564.598049999997,
+      "p100_ms": 14858.729,
+      "max_ms": 14858.729
+    },
+    "total": {
+      "name": "total_ms",
+      "n": 100,
+      "min_ms": 3187.692,
+      "mean_ms": 6255.710959999999,
+      "median_ms": 5368.205,
+      "p50_ms": 5368.205,
+      "p70_ms": 6382.562399999999,
+      "p90_ms": 10374.47270000001,
+      "p95_ms": 12391.419199999997,
+      "p100_ms": 15997.77,
+      "max_ms": 15997.77
+    }
+  },
+  "after_sequential": {
+    "rag_core": {
+      "name": "rag_core_ms",
+      "n": 100,
+      "min_ms": 38.757,
+      "mean_ms": 68.44996,
+      "median_ms": 66.2355,
+      "p50_ms": 66.2355,
+      "p70_ms": 74.21499999999999,
+      "p90_ms": 89.15180000000001,
+      "p95_ms": 102.56559999999999,
+      "p100_ms": 131.278,
+      "max_ms": 131.278
+    },
+    "retrieval_wall": {
+      "name": "retrieval_wall_ms",
+      "n": 100,
+      "min_ms": 38.586,
+      "mean_ms": 68.22258,
+      "median_ms": 66.0435,
+      "p50_ms": 66.0435,
+      "p70_ms": 74.0102,
+      "p90_ms": 88.8717,
+      "p95_ms": 102.29145,
+      "p100_ms": 130.976,
+      "max_ms": 130.976
+    },
+    "total_without_generation": {
+      "name": "total_ms",
+      "n": 100,
+      "min_ms": 38.776,
+      "mean_ms": 68.46912999999999,
+      "median_ms": 66.25450000000001,
+      "p50_ms": 66.25450000000001,
+      "p70_ms": 74.23389999999999,
+      "p90_ms": 89.17280000000001,
+      "p95_ms": 102.58465,
+      "p100_ms": 131.301,
+      "max_ms": 131.301
+    }
+  },
+  "after_parallel": {
+    "rag_core": {
+      "name": "rag_core_ms",
+      "n": 100,
+      "min_ms": 36.324,
+      "mean_ms": 55.39983000000001,
+      "median_ms": 52.8705,
+      "p50_ms": 52.8705,
+      "p70_ms": 58.6688,
+      "p90_ms": 68.08470000000001,
+      "p95_ms": 74.32085,
+      "p100_ms": 101.754,
+      "max_ms": 101.754
+    },
+    "retrieval_wall": {
+      "name": "retrieval_wall_ms",
+      "n": 100,
+      "min_ms": 36.115,
+      "mean_ms": 55.19941999999999,
+      "median_ms": 52.6665,
+      "p50_ms": 52.6665,
+      "p70_ms": 58.4444,
+      "p90_ms": 67.8744,
+      "p95_ms": 74.09425,
+      "p100_ms": 101.535,
+      "max_ms": 101.535
+    },
+    "total_without_generation": {
+      "name": "total_ms",
+      "n": 100,
+      "min_ms": 36.355,
+      "mean_ms": 55.424479999999996,
+      "median_ms": 52.897,
+      "p50_ms": 52.897,
+      "p70_ms": 58.6934,
+      "p90_ms": 68.1076,
+      "p95_ms": 74.3438,
+      "p100_ms": 101.776,
+      "max_ms": 101.776
+    }
+  },
+  "quality_tradeoff": {
+    "with_reranker": {
+      "mrr": 0.5368571428571428,
+      "ndcg_at_10": 0.5969307517708227
+    },
+    "without_reranker_hybrid_rrf": {
+      "mrr": 0.399563492063492,
+      "ndcg_at_10": 0.49939100450060353
+    },
+    "source": "E:\\Hackathons\\Hacker House GOA Task 2\\hh-goa-voice-rag\\benchmarks\\retrieval\\retrieval_report.json"
+  }
+}
