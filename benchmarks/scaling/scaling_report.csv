@@ -1,0 +1,6 @@
+records_requested,status,query_records,chunks,qdrant_points,wall_s,peak_rss_mb,bm25_file_bytes,chunks_per_s,records_per_s,reason
+500,measured_baseline,500,11478,11478,,,15574429,,,Existing production development index
+1000,measured,1000,22573,22553,701.01,3328.5,30361984,32.2,1.43,
+10000,skipped,,,,,,,,"insufficient free RAM for ~10000 records (free=2.17 GiB, estimated working set≈2.84 GiB)"
+50000,skipped,,,,,,,,Not attempted: 1K peaked at 3.33 GiB RSS on 11.34 GiB host
+100000,skipped,,,,,,,,Not attempted: exceeds safe local RAM policy after measured 1K peak
