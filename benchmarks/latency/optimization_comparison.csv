@@ -1,0 +1,4 @@
+configuration,rag_core_p50_ms,retrieval_p50_ms,reranker_p50_ms
+before_reranker_enabled_parallel,1020.7855,97.6565,917.4445
+after_reranker_disabled_sequential,66.2355,66.0435,0.0
+after_reranker_disabled_parallel,52.8705,52.6665,0.0
