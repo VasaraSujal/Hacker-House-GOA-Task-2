@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: hh-goa-voice-rag-api
+    runtime: docker
+    plan: standard
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    healthCheckPath: /health
+    autoDeploy: false
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: INFO
+      - key: CORS_ORIGINS
+        sync: false
+      - key: ELEVENLABS_API_KEY
+        sync: false
+      - key: QDRANT_URL
+        sync: false
+      - key: QDRANT_API_KEY
+        sync: false
+      - key: QDRANT_COLLECTION
+        value: hh_goa_rag
+      - key: QDRANT_TIMEOUT_S
+        value: "30"
+      - key: BM25_INDEX_PATH
+        value: /app/data/indexes/bm25.pkl
+      - key: EMBEDDING_MODEL
+        value: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+      - key: EMBEDDING_DEVICE
+        value: cpu
+      - key: ENABLE_RERANKER
+        value: "false"
+      - key: MAX_AUDIO_SIZE_MB
+        value: "20"
+      - key: VOICE_RATE_LIMIT_PER_MINUTE
+        value: "20"
