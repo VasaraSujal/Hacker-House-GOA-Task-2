@@ -1,0 +1,44 @@
+.env
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.production.example
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.eggs/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.idea/
+.vscode/
+*.log
+
+# Local data, indexes, and model caches
+data/indexes/
+data/cache/
+data/checkpoints/
+data/eval/
+backups/
+*.pkl
+*.bin
+*.pt
+*.onnx
+
+# Hugging Face / torch caches (if created inside the repo)
+.huggingface/
+hf_cache/
+.cache/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
