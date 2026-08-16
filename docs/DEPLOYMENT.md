@@ -1,66 +1,78 @@
 # Production Deployment
 
-Target architecture: Vercel static frontend, Render Docker backend, Qdrant Cloud,
-and ElevenLabs APIs. Kubernetes and full-corpus ingestion are intentionally out
-of scope.
+Target architecture: Vercel static frontend, Render Free Docker backend,
+Qdrant Cloud Inference, and ElevenLabs STT. Kubernetes and full-corpus
+ingestion are intentionally out of scope.
 
 ## Prerequisites
 
-- Qdrant Cloud cluster with enough capacity for 11,478 384-dimensional vectors
-- Render Standard (2 GB RAM minimum; 4 GB preferred for startup margin)
+- Qdrant Cloud cluster with Inference enabled
+- Free hosted dense model (recommended: `intfloat/multilingual-e5-small`)
+- Render Free web service (512 MB) using `backend/Dockerfile.free`
 - Vercel project
-- ElevenLabs API key with STT and Conversational AI permissions
-- Docker for local image verification
+- ElevenLabs API key with STT permissions
+- Docker for local Free-image verification
 
 The deployed knowledge base is the validated Hindi validation subset:
 500 query records, 9,989 passages, and 11,478 chunks. It is not the complete
 55–56 GB MSMARCO-XI snapshot.
 
-## Qdrant Cloud
+## Profiles
 
-1. Create a Qdrant Cloud cluster; do not expose the local Docker service.
-2. Set migration variables in the current shell. Do not store keys in files:
+| Profile | Image | Retrieval | Answer |
+|---|---|---|---|
+| Full local | `backend/Dockerfile` | local MiniLM + Qdrant | generative ElevenLabs |
+| Render Free | `backend/Dockerfile.free` | Qdrant Cloud inference + BM25 | extractive |
 
-   ```powershell
-   $env:TARGET_QDRANT_URL="https://<cluster>.<region>.cloud.qdrant.io:6333"
-   $env:TARGET_QDRANT_API_KEY="<secret>"
-   cd backend
-   python scripts/migrate_qdrant.py
-   ```
+## Qdrant Cloud production collection
 
-3. The script copies payloads and vectors in batches without deleting the local
-   collection. It must finish with exactly 11,478 target points and verify
-   `text`, `document_id`, and `chunk_id` payload fields.
+Do **not** query the existing `hh_goa_rag` vectors with a different embedding
+model. Rebuild a dedicated collection:
 
-A local snapshot can be recreated with `python scripts/backup_qdrant.py`.
-Snapshots under `backups/` are excluded from Git and Docker.
-
-## Backend on Render
-
-The root `render.yaml` and `backend/Dockerfile` are the deployment contract.
-The image embeds the persisted BM25 artifact (`data/indexes/bm25.pkl`) and
-pre-caches the MiniLM embedding model. It never embeds `.env` or provider keys.
-
-Local image verification (MEASURED on this workstation):
-
-```text
-docker build -f backend/Dockerfile -t hh-goa-voice-rag-api:stage6 .
-# image size ≈ 1.98 GB (CPU torch; no CUDA)
-# container /health → ok; BM25 11478 docs; embeddings dim=384
-# voice fixture → HTTP 200, grounded=true, 5 sources
+```powershell
+cd backend
+$env:SOURCE_QDRANT_URL="http://127.0.0.1:6333"
+$env:SOURCE_QDRANT_COLLECTION="hh_goa_rag"
+$env:TARGET_QDRANT_URL="https://<cluster>.<region>.cloud.qdrant.io:6333"
+$env:TARGET_QDRANT_API_KEY="<secret>"
+$env:TARGET_QDRANT_COLLECTION="hh_goa_voice_rag_prod"
+$env:QDRANT_INFERENCE_MODEL="intfloat/multilingual-e5-small"
+python scripts/rebuild_cloud_collection.py
 ```
 
-Render still needs a Git-connected service or a pushed registry image; this
-project tree currently has no `.git` directory.
+Expected result: exactly 11,478 points, Cosine 384-d, payload fields
+`text`, `document_id`, `chunk_id`. Local source collection is never deleted.
+
+Optional payload/vector copy of the old model (reference only):
+
+```powershell
+python scripts/migrate_qdrant.py
+```
+
+## Backend on Render Free
+
+Use root `render.yaml` and `backend/Dockerfile.free`.
+
+```text
+docker build -f backend/Dockerfile.free -t hh-goa-voice-rag-api:free .
+```
+
+The Free image does **not** install Torch or SentenceTransformers. It embeds
+the BM25 pickle and FastAPI runtime only.
 
 Required Render environment variables:
 
 ```text
 APP_ENV=production
+RETRIEVAL_MODE=cloud_dense_sparse
+ANSWER_MODE=extractive
+WEB_CONCURRENCY=1
 ELEVENLABS_API_KEY=<secret>
 QDRANT_URL=https://<qdrant-cloud-host>:6333
 QDRANT_API_KEY=<secret>
-QDRANT_COLLECTION=hh_goa_rag
+QDRANT_COLLECTION=hh_goa_voice_rag_prod
+QDRANT_INFERENCE_MODEL=intfloat/multilingual-e5-small
+QDRANT_INFERENCE_DIMENSION=384
 CORS_ORIGINS=https://<vercel-production-domain>
 BM25_INDEX_PATH=/app/data/indexes/bm25.pkl
 VOICE_RATE_LIMIT_PER_MINUTE=20
@@ -68,7 +80,6 @@ QDRANT_TIMEOUT_S=30
 ```
 
 Render supplies `PORT`; the container binds `0.0.0.0:${PORT}` with one worker.
-One worker avoids duplicating the embedding model and in-memory BM25 index.
 `GET /health` is the platform health check. Production startup fails if Qdrant
 is unavailable/empty, BM25 is missing, or ElevenLabs STT is not configured.
 
@@ -99,25 +110,26 @@ curl.exe -X POST https://<backend>/api/voice/query `
 
 Then use the public Vercel page in Chrome:
 
-1. Ask “What is a corporation?” and verify transcript, grounded answer, five
-   production sources, and request latency.
+1. Ask “What is a corporation?” and verify transcript, grounded answer, sources,
+   and request latency.
 2. Ask “Who won yesterday's cricket match?” and verify knowledge-base refusal.
-3. Record twice and verify the microphone indicator turns off each time.
-4. Confirm the voice request is HTTPS and has no CORS errors.
+3. Confirm HTTPS and no CORS errors.
 
 ## Rollback
 
 - Keep the local Qdrant collection and snapshot unchanged.
 - Render: redeploy the previous immutable image/revision.
 - Vercel: promote the previous successful deployment.
-- Qdrant: do not delete or overwrite the cloud collection during app rollback.
-- If cloud migration validation fails, stop and continue using the local system;
-  never delete the source collection.
+- Qdrant: do not delete `hh_goa_rag` during app rollback.
+- If cloud rebuild validation fails, stop and continue using the local system.
 
 ## Known limitations
 
 - The deployment uses the validated subset, not the full MSMARCO-XI snapshot.
+- Render Free mode uses extractive answers, not ElevenLabs generation.
+- Dense embeddings in Free mode use multilingual-e5-small, not the local
+  paraphrase-multilingual MiniLM collection.
 - BM25 is an in-memory pickle suitable for ~11K chunks, not millions.
 - Rate limiting is per backend process and is not a distributed limiter.
-- External ElevenLabs STT and generation dominate end-to-end latency.
+- External ElevenLabs STT dominates end-to-end voice latency.
 - End-to-end voice latency is multi-second; it is not under 200 ms.
