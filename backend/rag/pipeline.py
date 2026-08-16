@@ -13,6 +13,7 @@ from rag.generation.prompts import REFUSAL_MESSAGE, SYSTEM_PROMPT, build_user_pr
 from rag.guardrails.grounding_guard import GroundingGuard
 from rag.guardrails.input_guard import InputGuard
 from rag.guardrails.relevance_guard import RelevanceGuard
+from rag.guardrails.coverage_guard import LexicalCoverageGuard
 from rag.ingestion.cleaner import preprocess_query
 from rag.reranking.base import Reranker
 from rag.retrieval.hybrid import HybridRetriever
@@ -35,6 +36,7 @@ class RAGPipeline:
         relevance_guard: RelevanceGuard | None = None,
         grounding_guard: GroundingGuard | None = None,
         context_builder: ContextBuilder | None = None,
+        coverage_guard: LexicalCoverageGuard | None = None,
     ) -> None:
         self.settings = settings
         self.hybrid = hybrid
@@ -50,6 +52,7 @@ class RAGPipeline:
             refusal_message=settings.refusal_message,
         )
         self.context_builder = context_builder or ContextBuilder(max_chars=settings.max_context_chars)
+        self.coverage_guard = coverage_guard or LexicalCoverageGuard()
 
     def run(
         self,
@@ -105,6 +108,37 @@ class RAGPipeline:
                     total_ms=total_ms,
                 ),
             )
+
+        if (self.settings.answer_mode or "").lower() == "extractive":
+            coverage = self.coverage_guard.check(cleaned, hybrid_out.results)
+            if not coverage.ok:
+                pipeline_ms = (time.perf_counter() - t_all) * 1000
+                total_ms = request_parsing_ms + pipeline_ms
+                logger.info(
+                    "RAG refused at lexical coverage guard",
+                    extra={
+                        "request_id": request_id,
+                        "reason": coverage.reason,
+                        "best_overlap": coverage.best_overlap,
+                        "total_ms": round(total_ms, 2),
+                    },
+                )
+                return self._refusal(
+                    cleaned,
+                    request_id,
+                    _build_latency(
+                        request_parsing_ms=request_parsing_ms,
+                        query_processing_ms=query_processing_ms,
+                        embedding_ms=hybrid_out.embedding_ms,
+                        dense_retrieval_ms=hybrid_out.dense_retrieval_ms,
+                        bm25_ms=hybrid_out.bm25_ms,
+                        retrieval_wall_ms=hybrid_out.retrieval_wall_ms,
+                        fusion_ms=hybrid_out.fusion_ms,
+                        relevance_guard_ms=relevance_guard_ms,
+                        total_ms=total_ms,
+                    ),
+                    sources=hybrid_out.results[: self.settings.rerank_top_k],
+                )
 
         t_rerank = time.perf_counter()
         reranked = self.reranker.rerank(cleaned, hybrid_out.results, self.settings.rerank_top_k)
