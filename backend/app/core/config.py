@@ -42,6 +42,14 @@ class Settings(BaseSettings):
     qdrant_collection: str = "hh_goa_rag"
     qdrant_api_key: str | None = None
     qdrant_timeout_s: float = 30.0
+    qdrant_inference_model: str = "intfloat/multilingual-e5-small"
+    qdrant_inference_dimension: int = 384
+
+    # local = full Torch/SentenceTransformers path
+    # cloud_dense_sparse = Qdrant Cloud hosted inference + BM25 (Render Free)
+    retrieval_mode: Literal["local", "cloud_dense_sparse"] = "local"
+    # generative = ElevenLabs LLM; extractive = source-sentence composition
+    answer_mode: Literal["generative", "extractive"] = "generative"
 
     voice_rate_limit_per_minute: int = 20
 
