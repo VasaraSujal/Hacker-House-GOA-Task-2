@@ -25,26 +25,33 @@ class QdrantStore:
         api_key: str | None = None,
         vector_size: int = 384,
         timeout: float = 30.0,
+        *,
+        cloud_inference: bool = False,
     ) -> None:
         self.url = url
         self.collection = collection
         self.vector_size = vector_size
         self.timeout = timeout
-        self._client = self._connect(url, api_key, timeout)
+        self.cloud_inference = cloud_inference
+        self._client = self._connect(url, api_key, timeout, cloud_inference=cloud_inference)
 
     @staticmethod
-    def _connect(url: str, api_key: str | None, timeout: float):
+    def _connect(url: str, api_key: str | None, timeout: float, *, cloud_inference: bool = False):
         try:
             from qdrant_client import QdrantClient
         except ImportError as exc:
             raise VectorStoreError("qdrant-client is not installed") from exc
         try:
-            return QdrantClient(
-                url=url,
-                api_key=api_key or None,
-                timeout=timeout,
-                check_compatibility=False,
-            )
+            kwargs: dict[str, Any] = {
+                "url": url,
+                "api_key": api_key or None,
+                "timeout": timeout,
+                "check_compatibility": False,
+            }
+            # cloud_inference is only meaningful against Qdrant Cloud clusters.
+            if cloud_inference:
+                kwargs["cloud_inference"] = True
+            return QdrantClient(**kwargs)
         except Exception as exc:  # noqa: BLE001
             raise VectorStoreError(f"Cannot connect to Qdrant at {url}: {exc}") from exc
 
@@ -127,6 +134,55 @@ class QdrantStore:
                 )
         except Exception as exc:  # noqa: BLE001
             raise VectorStoreError(f"Qdrant search failed: {exc}") from exc
+        results: list[RetrievalResult] = []
+        for hit in hits:
+            payload: dict[str, Any] = dict(hit.payload or {})
+            text = str(payload.pop("text", ""))
+            document_id = str(payload.pop("document_id", ""))
+            chunk_id = str(payload.pop("chunk_id", hit.id))
+            results.append(
+                RetrievalResult(
+                    text=text,
+                    score=float(hit.score or 0.0),
+                    document_id=document_id,
+                    chunk_id=str(chunk_id),
+                    metadata=payload,
+                )
+            )
+        return results
+
+    def search_with_inference(
+        self,
+        query_text: str,
+        *,
+        model: str,
+        top_k: int = 20,
+    ) -> list[RetrievalResult]:
+        """Dense search where Qdrant Cloud embeds the query via hosted inference."""
+        if not self.cloud_inference:
+            raise VectorStoreError(
+                "search_with_inference requires QdrantStore(cloud_inference=True)"
+            )
+        try:
+            from qdrant_client.http import models as qmodels
+        except ImportError as exc:
+            raise VectorStoreError("qdrant-client is not installed") from exc
+        try:
+            document = qmodels.Document(text=query_text, model=model)
+            if hasattr(self._client, "query_points"):
+                response = self._client.query_points(
+                    collection_name=self.collection,
+                    query=document,
+                    limit=top_k,
+                    with_payload=True,
+                )
+                hits = response.points
+            else:
+                raise VectorStoreError("Installed qdrant-client cannot run Document inference queries")
+        except VectorStoreError:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            raise VectorStoreError(f"Qdrant inference search failed: {exc}") from exc
         results: list[RetrievalResult] = []
         for hit in hits:
             payload: dict[str, Any] = dict(hit.payload or {})
