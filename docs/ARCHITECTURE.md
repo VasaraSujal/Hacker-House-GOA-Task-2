@@ -1,27 +1,75 @@
 # Architecture
 
-## Live request flow
+## Two runtime profiles
+
+The system supports a full hybrid local RAG mode and a memory-constrained
+production mode for Render Free (~512 MB RAM).
+
+### Full local mode
+
+```text
+Chrome microphone
+  → React / Vite
+  → FastAPI
+  → ElevenLabs Scribe v2
+  → local MiniLM query embedding
+  → Qdrant (local or cloud copy of hh_goa_rag)
+  + persisted BM25
+  → Reciprocal Rank Fusion
+  → optional CrossEncoder reranker
+  → ElevenLabs generative answer
+  → grounding guard
+  → transcript + answer + sources + latency
+```
+
+Config:
+
+```text
+RETRIEVAL_MODE=local
+ANSWER_MODE=generative
+EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+```
+
+### Render Free mode
 
 ```text
 Chrome microphone
   → React / Vite on Vercel (HTTPS)
-  → FastAPI on Render (HTTPS)
+  → FastAPI on Render Free (HTTPS)
   → ElevenLabs Scribe v2
-  → validated transcript
-  → hybrid retrieval
-      ├─ dense MiniLM query embedding → Qdrant Cloud
-      └─ persisted in-memory BM25
+  → Qdrant Cloud hosted inference (dense)
+  + persisted BM25
   → Reciprocal Rank Fusion
-  → optional bounded reranker
-  → context builder
-  → ElevenLabs generation
+  → lexical light reranker
+  → extractive grounded answer
   → grounding guard
   → transcript + answer + sources + latency
-  → React result UI
 ```
 
-The browser communicates only with FastAPI. ElevenLabs and Qdrant credentials
-remain server-side.
+Config:
+
+```text
+RETRIEVAL_MODE=cloud_dense_sparse
+ANSWER_MODE=extractive
+QDRANT_COLLECTION=hh_goa_voice_rag_prod
+QDRANT_INFERENCE_MODEL=intfloat/multilingual-e5-small
+```
+
+Render Free must not load PyTorch or SentenceTransformers. Dense embedding
+inference runs inside Qdrant Cloud. The browser communicates only with FastAPI.
+ElevenLabs and Qdrant credentials remain server-side.
+
+## Why a separate production collection
+
+Local vectors were embedded with
+`paraphrase-multilingual-MiniLM-L12-v2` (384-d, Cosine, normalized). That exact
+model is not available on Qdrant Cloud Inference. Free hosted models on the
+cluster include `intfloat/multilingual-e5-small` and
+`sentence-transformers/all-MiniLM-L6-v2` (both 384-d).
+
+Document and query embeddings must use the same model. Therefore production
+uses a dedicated collection (`hh_goa_voice_rag_prod`) rebuilt with hosted
+inference. Local `hh_goa_rag` is never overwritten.
 
 ## Runtime boundaries
 
@@ -34,8 +82,9 @@ remain server-side.
 
 ### Backend
 
-- One Uvicorn worker to avoid duplicating model/BM25 memory
-- MiniLM model loaded once and cached
+- One Uvicorn worker (`WEB_CONCURRENCY=1`)
+- Local mode: MiniLM loaded once and cached
+- Free mode: no local embedding model; Qdrant Cloud Document inference
 - BM25 pickle loaded once at startup
 - Shared Qdrant and ElevenLabs HTTP clients
 - Explicit CORS allow-list and in-process voice rate limiter
@@ -43,7 +92,9 @@ remain server-side.
 
 ### Storage
 
-- Qdrant Cloud: 11,478 vectors, 384 dimensions, Cosine distance, payload text
+- Local/reference: `hh_goa_rag`, 11,478 vectors, paraphrase-multilingual MiniLM
+- Production Free: `hh_goa_voice_rag_prod`, 11,478 vectors, multilingual-e5-small
+  via Qdrant Cloud Inference
 - Container image: persisted BM25 index for the same 11,478 chunk IDs
 - Local Docker Qdrant and snapshot remain the rollback/reference copy
 
