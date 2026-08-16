@@ -1,8 +1,13 @@
-# HH Goa 2026 — Voice-Enabled RAG (Stage 6)
+# HH Goa 2026 — Voice-Enabled RAG (Stage 6B)
 
-Production-grade **voice RAG application** for Hacker House Goa 2026 Shortlisting Task 2. Stages 1–5 are verified locally. Stage 6 prepares a secure public deployment (Vercel + Render + Qdrant Cloud) over the validated development subset — not the full 55–56 GB MSMARCO-XI snapshot.
+Production-grade **voice RAG application** for Hacker House Goa 2026 Shortlisting Task 2. Stages 1–5 are verified locally. Stage 6B adds a Render Free profile that keeps the full local RAG intact while moving dense embedding inference to Qdrant Cloud and using extractive answers so the API can run within ~512 MB RAM.
 
-**Live deployment status:** blocked on provider authentication. See `docs/DEPLOYMENT.md` and `benchmarks/STAGE6_DEPLOYMENT_REPORT.md`.
+**Modes:**
+
+- **Full local:** `RETRIEVAL_MODE=local`, `ANSWER_MODE=generative` (Torch MiniLM + optional ElevenLabs generation)
+- **Render Free:** `RETRIEVAL_MODE=cloud_dense_sparse`, `ANSWER_MODE=extractive` (Qdrant Cloud inference + BM25 + lexical rerank; no Torch)
+
+See `docs/DEPLOYMENT.md`, `docs/ARCHITECTURE.md`, and `benchmarks/STAGE6B_FREE_DEPLOYMENT_REPORT.md`.
 
 ## HH Goa Task 2 requirements
 
