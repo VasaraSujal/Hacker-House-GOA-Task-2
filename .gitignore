@@ -43,7 +43,10 @@ hf_cache/
 Thumbs.db
 desktop.ini
 
-# Ephemeral local Stage 6 verification dumps
+# Ephemeral local Stage 6 / 6B verification dumps
 benchmarks/stage6_*.txt
 benchmarks/stage6_container_voice.json
+benchmarks/stage6b_*.txt
+benchmarks/stage6b_free_voice.json
+benchmarks/stage6b_free_refusal.json
 
