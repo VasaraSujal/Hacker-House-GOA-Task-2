@@ -72,7 +72,15 @@ describe('voice experience', () => {
     expect(await screen.findByText('“What is a corporation?”')).toBeInTheDocument()
     expect(screen.getByText('A corporation is a legal entity.')).toBeInTheDocument()
     expect(screen.getByText('Grounded in retrieved context')).toBeInTheDocument()
-    expect(screen.getByText('4.20 s')).toBeInTheDocument()
+    expect(screen.getAllByText('4.20 s')[0]).toBeInTheDocument()
+    expect(screen.getByText('Grounded using 1 retrieved passage')).toBeInTheDocument()
+    expect(screen.queryByText('Retrieved sources')).not.toBeInTheDocument()
+    expect(screen.queryByText('Document doc-1')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'View evidence' }))
+    expect(await screen.findByRole('dialog', { name: 'Retrieved passages' })).toBeInTheDocument()
+    expect(screen.getByText('Document doc-1')).toBeInTheDocument()
+    expect(screen.getByText('Supporting context')).toBeInTheDocument()
   })
 
   it('shows a knowledge-base refusal as a valid result', async () => {
@@ -82,7 +90,10 @@ describe('voice experience', () => {
     await recordQuestion()
 
     expect(await screen.findByText('Knowledge-base refusal')).toBeInTheDocument()
+    expect(screen.getByText('Unable to answer from knowledge base')).toBeInTheDocument()
+    expect(screen.getByText(/Grounding: Not available/)).toBeInTheDocument()
     expect(screen.queryByText('Something went wrong')).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'View evidence' })).not.toBeInTheDocument()
   })
 
   it('shows an application error when the request fails', async () => {
@@ -91,7 +102,9 @@ describe('voice experience', () => {
 
     await recordQuestion()
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('Unable to connect to the RAG backend')
+    const alert = await screen.findByRole('alert')
+    expect(alert).toHaveTextContent('Something went wrong while processing your request.')
+    expect(alert).toHaveTextContent('Unable to connect to the RAG backend')
   })
 
   it('explains a denied microphone permission', async () => {
@@ -104,5 +117,32 @@ describe('voice experience', () => {
 
     expect(await screen.findByRole('alert')).toHaveTextContent('Microphone access was denied')
     expect(submitVoiceQuery).not.toHaveBeenCalled()
+  })
+
+  it('renders reported latency fields and skips missing ones', async () => {
+    const payload = response()
+    payload.latency = {
+      stt_ms: 889,
+      rag_core_ms: 2990,
+      generation_ms: 0,
+      grounding_ms: 0.4,
+      total_ms: 3880,
+    }
+    vi.mocked(submitVoiceQuery).mockResolvedValue(payload)
+    render(<App />)
+
+    await recordQuestion()
+
+    expect(await screen.findByText('3.88 s')).toBeInTheDocument()
+    expect(screen.getAllByText('889 ms').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('2.99 s').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('0 ms').length).toBeGreaterThan(0)
+    expect(screen.queryByText('undefined ms')).not.toBeInTheDocument()
+    expect(screen.queryByText('NaN ms')).not.toBeInTheDocument()
+    expect(screen.queryByText('Embedding')).not.toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: 'Show pipeline timings' }))
+    expect(screen.getAllByText('Speech-to-text').length).toBeGreaterThan(0)
+    expect(screen.queryByText('Embedding')).not.toBeInTheDocument()
   })
 })
