@@ -3,7 +3,13 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    WEB_CONCURRENCY=1
+    WEB_CONCURRENCY=1 \
+    DEPLOYMENT_PROFILE=render_free \
+    RETRIEVAL_MODE=cloud_dense_sparse \
+    ANSWER_MODE=extractive \
+    QDRANT_COLLECTION=hh_goa_voice_rag_prod \
+    QDRANT_INFERENCE_MODEL=intfloat/multilingual-e5-small \
+    QDRANT_INFERENCE_DIMENSION=384
 
 WORKDIR /app
 
