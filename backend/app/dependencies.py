@@ -6,7 +6,6 @@ from app.core.config import Settings
 from rag.generation.elevenlabs import ElevenLabsProvider
 from rag.generation.extractive import ExtractiveAnswerProvider
 from rag.pipeline import RAGPipeline
-from rag.reranking.cross_encoder import CrossEncoderReranker
 from rag.reranking.identity import IdentityReranker
 from rag.reranking.lexical import LexicalLightReranker
 from rag.retrieval.bm25 import BM25Index
@@ -20,7 +19,23 @@ logger = logging.getLogger(__name__)
 _PIPELINE: RAGPipeline | None = None
 
 
+def validate_deployment_profile(settings: Settings) -> None:
+    """Fail before model initialization if the Free image is misconfigured."""
+    if settings.deployment_profile != "render_free":
+        return
+    if settings.retrieval_mode != "cloud_dense_sparse":
+        raise RuntimeError(
+            "Cloud deployment attempted to initialize local embedding model. "
+            "Render Free requires RETRIEVAL_MODE=cloud_dense_sparse."
+        )
+    if settings.answer_mode != "extractive":
+        raise RuntimeError(
+            "Render Free requires ANSWER_MODE=extractive; check deployment configuration."
+        )
+
+
 def build_pipeline(settings: Settings) -> RAGPipeline:
+    validate_deployment_profile(settings)
     retrieval_mode = (settings.retrieval_mode or "local").strip().lower()
     answer_mode = (settings.answer_mode or "generative").strip().lower()
 
@@ -86,6 +101,8 @@ def build_pipeline(settings: Settings) -> RAGPipeline:
         # Free profile always uses the lexical light reranker (no Torch).
         reranker = LexicalLightReranker()
     elif settings.enable_reranker:
+        from rag.reranking.cross_encoder import CrossEncoderReranker
+
         reranker = CrossEncoderReranker(settings.reranker_model, device=settings.reranker_device)
     else:
         reranker = IdentityReranker()
