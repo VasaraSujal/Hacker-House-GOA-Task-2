@@ -1,0 +1,130 @@
+[
+  {
+    "query": "What is a corporation?",
+    "answer": "A corporation is a company or group of people authorized to act as a single entity (legally a person) and recognized as such in law. A shareholder or stockholder is an individual or institution (including a corporation) that legally owns one or more shares of stock in a public or private corporation. Legally, a person is not a shareholder in a corporation until his or her name and other details are entered in the register of shareholders.",
+    "grounded": true,
+    "refused": false,
+    "source_count": 5,
+    "source_document_ids": [
+      "1102432-en-0-4105c6e994e4c7ec",
+      "1102432-en-5-786c11494612e6ab",
+      "220241-en-4-112c5996dbd29b94",
+      "220241-en-7-7883589a6cacaa78",
+      "1060251-en-5-66ae3d70083faa38"
+    ],
+    "latency": {
+      "request_parsing_ms": 1.043,
+      "query_processing_ms": 0.017,
+      "embedding_ms": 473.289,
+      "dense_retrieval_ms": 0.0,
+      "bm25_ms": 102.383,
+      "retrieval_wall_ms": 473.484,
+      "fusion_ms": 0.105,
+      "relevance_guard_ms": 0.008,
+      "reranking_ms": 0.543,
+      "context_building_ms": 0.053,
+      "generation_ms": 0.383,
+      "grounding_ms": 0.228,
+      "rag_core_ms": 474.439,
+      "component_sum_ms": 475.864,
+      "unaccounted_ms": 0.259,
+      "total_ms": 476.124
+    }
+  },
+  {
+    "query": "What is a shareholder?",
+    "answer": "One of your key rights as a shareholder is the right to vote your shares in corporate elections. A shareholder or stockholder is an individual or institution (including a corporation) that legally owns one or more shares of stock in a public or private corporation. Legally, a person is not a shareholder in a corporation until his or her name and other details are entered in the register of shareholders.",
+    "grounded": true,
+    "refused": false,
+    "source_count": 5,
+    "source_document_ids": [
+      "220241-en-2-401ce180eedb93e5",
+      "220241-en-4-112c5996dbd29b94",
+      "220241-en-5-18f05c59697d9395",
+      "220241-en-8-67c7a1cac9575311",
+      "220241-en-7-7883589a6cacaa78"
+    ],
+    "latency": {
+      "request_parsing_ms": 0.969,
+      "query_processing_ms": 0.018,
+      "embedding_ms": 159.723,
+      "dense_retrieval_ms": 0.0,
+      "bm25_ms": 57.748,
+      "retrieval_wall_ms": 159.876,
+      "fusion_ms": 0.091,
+      "relevance_guard_ms": 0.008,
+      "reranking_ms": 0.557,
+      "context_building_ms": 0.053,
+      "generation_ms": 0.373,
+      "grounding_ms": 0.168,
+      "rag_core_ms": 160.77,
+      "component_sum_ms": 162.112,
+      "unaccounted_ms": 0.231,
+      "total_ms": 162.343
+    }
+  },
+  {
+    "query": "How do shareholders vote?",
+    "answer": "How do I know when to vote? Shareholders have no right to vote on basic management issues. Shareholders usually have one vote per share.",
+    "grounded": true,
+    "refused": false,
+    "source_count": 5,
+    "source_document_ids": [
+      "220241-en-5-18f05c59697d9395",
+      "220241-en-9-665fcdb1e0a7ebd2",
+      "220241-en-3-1289235c018afd95",
+      "220241-en-8-67c7a1cac9575311",
+      "220241-en-1-036f661407e26488"
+    ],
+    "latency": {
+      "request_parsing_ms": 0.981,
+      "query_processing_ms": 0.017,
+      "embedding_ms": 161.019,
+      "dense_retrieval_ms": 0.0,
+      "bm25_ms": 74.837,
+      "retrieval_wall_ms": 161.155,
+      "fusion_ms": 0.091,
+      "relevance_guard_ms": 0.008,
+      "reranking_ms": 0.654,
+      "context_building_ms": 0.056,
+      "generation_ms": 0.349,
+      "grounding_ms": 0.244,
+      "rag_core_ms": 162.224,
+      "component_sum_ms": 163.555,
+      "unaccounted_ms": 0.283,
+      "total_ms": 163.837
+    }
+  },
+  {
+    "query": "Who won yesterday's cricket match?",
+    "answer": "I couldn't find enough relevant information in the provided knowledge base to answer this question.",
+    "grounded": true,
+    "refused": true,
+    "source_count": 5,
+    "source_document_ids": [
+      "83264-en-7-d453e46323731c02",
+      "83264-en-4-6f9471a21dda1108",
+      "1090309-en-4-65592d8a976fcd35",
+      "353418-en-3-8390247e26349224",
+      "337413-en-9-905d5b1a4e76b645"
+    ],
+    "latency": {
+      "request_parsing_ms": 0.999,
+      "query_processing_ms": 0.019,
+      "embedding_ms": 163.02,
+      "dense_retrieval_ms": 0.0,
+      "bm25_ms": 122.443,
+      "retrieval_wall_ms": 166.355,
+      "fusion_ms": 0.101,
+      "relevance_guard_ms": 0.008,
+      "reranking_ms": 0.0,
+      "context_building_ms": 0.0,
+      "generation_ms": 0.0,
+      "grounding_ms": 0.0,
+      "rag_core_ms": 166.483,
+      "component_sum_ms": 167.482,
+      "unaccounted_ms": 0.212,
+      "total_ms": 167.694
+    }
+  }
+]
