@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import os
 import threading
 
 import numpy as np
@@ -29,6 +30,11 @@ class LocalEmbeddingProvider(EmbeddingProvider):
         normalize: bool = True,
         batch_size: int = 64,
     ) -> None:
+        if os.getenv("DEPLOYMENT_PROFILE", "full").strip().lower() == "render_free":
+            raise EmbeddingError(
+                "Cloud deployment attempted to initialize local embedding model. "
+                "Check RETRIEVAL_MODE and deployment configuration."
+            )
         if not model_name:
             raise EmbeddingError("EMBEDDING_MODEL is empty")
         self._model_name = model_name
