@@ -23,6 +23,7 @@ class Settings(BaseSettings):
     app_port: int = 8000
     log_level: str = "INFO"
     cors_origins: str = "http://localhost:5173,http://127.0.0.1:5173"
+    deployment_profile: Literal["full", "render_free"] = "full"
 
     dataset_id: str = "ai4bharat/MSMARCO-XI"
     dataset_config: str = "hi"
