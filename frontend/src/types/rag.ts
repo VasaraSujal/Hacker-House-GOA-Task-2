@@ -7,23 +7,26 @@ export interface SourceDocument {
 }
 
 export interface VoiceLatency {
-  audio_validation_ms: number
-  stt_ms: number
-  transcript_validation_ms: number
-  query_processing_ms: number
-  embedding_ms: number
-  dense_retrieval_ms: number
-  bm25_ms: number
-  retrieval_wall_ms: number
-  fusion_ms: number
-  relevance_guard_ms: number
-  reranking_ms: number
-  context_building_ms: number
-  generation_ms: number
-  grounding_ms: number
-  rag_core_ms: number
-  rag_ms: number
-  total_ms: number
+  request_parsing_ms?: number | null
+  query_processing_ms?: number | null
+  embedding_ms?: number | null
+  dense_retrieval_ms?: number | null
+  bm25_ms?: number | null
+  retrieval_wall_ms?: number | null
+  fusion_ms?: number | null
+  relevance_guard_ms?: number | null
+  reranking_ms?: number | null
+  context_building_ms?: number | null
+  generation_ms?: number | null
+  grounding_ms?: number | null
+  rag_core_ms?: number | null
+  component_sum_ms?: number | null
+  unaccounted_ms?: number | null
+  total_ms?: number | null
+  audio_validation_ms?: number | null
+  stt_ms?: number | null
+  transcript_validation_ms?: number | null
+  rag_ms?: number | null
 }
 
 export interface VoiceRagResponse {
