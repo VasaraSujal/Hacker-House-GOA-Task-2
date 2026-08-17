@@ -53,6 +53,22 @@ python scripts/migrate_qdrant.py
 
 Use root `render.yaml` and `backend/Dockerfile.free`.
 
+For an **existing manually created Render service**, `render.yaml` does not
+automatically replace dashboard settings. Open **Settings → Build & Deploy**
+and set:
+
+```text
+Root Directory:        (empty / repository root)
+Dockerfile Path:       ./backend/Dockerfile.free
+Docker Build Context:  .
+Docker Command:        (empty; use image CMD)
+```
+
+If the build log shows the model-cache step from `backend/Dockerfile` or the
+runtime log shows `rag.embeddings.local`, the dashboard service is still using
+the full image. Update the Dockerfile path and deploy again with **Clear build
+cache & deploy**.
+
 ```text
 docker build -f backend/Dockerfile.free -t hh-goa-voice-rag-api:free .
 ```
@@ -64,6 +80,7 @@ Required Render environment variables:
 
 ```text
 APP_ENV=production
+DEPLOYMENT_PROFILE=render_free
 RETRIEVAL_MODE=cloud_dense_sparse
 ANSWER_MODE=extractive
 WEB_CONCURRENCY=1
@@ -82,6 +99,9 @@ QDRANT_TIMEOUT_S=30
 Render supplies `PORT`; the container binds `0.0.0.0:${PORT}` with one worker.
 `GET /health` is the platform health check. Production startup fails if Qdrant
 is unavailable/empty, BM25 is missing, or ElevenLabs STT is not configured.
+The Free image also fails before local model initialization if its retrieval or
+answer mode is overridden incorrectly. Startup logs include only non-secret
+profile diagnostics.
 
 ## Frontend on Vercel
 
