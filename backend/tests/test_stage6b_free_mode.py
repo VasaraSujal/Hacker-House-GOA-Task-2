@@ -5,7 +5,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from app.core.config import Settings
-from app.dependencies import build_pipeline
+from app.dependencies import build_pipeline, validate_deployment_profile
+from app.core.exceptions import EmbeddingError
 from rag.generation.extractive import ExtractiveAnswerProvider
 from rag.generation.prompts import REFUSAL_MESSAGE, build_user_prompt
 from rag.reranking.lexical import LexicalLightReranker
@@ -61,6 +62,34 @@ def test_cloud_mode_requires_qdrant_credentials(tmp_path) -> None:
         build_pipeline(settings)
 
 
+def test_render_free_profile_rejects_local_retrieval() -> None:
+    settings = Settings(
+        deployment_profile="render_free",
+        retrieval_mode="local",
+        answer_mode="extractive",
+    )
+    with pytest.raises(RuntimeError, match="RETRIEVAL_MODE=cloud_dense_sparse"):
+        validate_deployment_profile(settings)
+
+
+def test_render_free_profile_rejects_generative_answer() -> None:
+    settings = Settings(
+        deployment_profile="render_free",
+        retrieval_mode="cloud_dense_sparse",
+        answer_mode="generative",
+    )
+    with pytest.raises(RuntimeError, match="ANSWER_MODE=extractive"):
+        validate_deployment_profile(settings)
+
+
+def test_local_embedding_provider_fails_before_loading_in_free_profile(monkeypatch) -> None:
+    monkeypatch.setenv("DEPLOYMENT_PROFILE", "render_free")
+    from rag.embeddings.local import LocalEmbeddingProvider
+
+    with pytest.raises(EmbeddingError, match="attempted to initialize local embedding"):
+        LocalEmbeddingProvider("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+
+
 def test_build_pipeline_cloud_mode_uses_cloud_dense_and_extractive(tmp_path) -> None:
     # Minimal BM25 pickle via BM25Index API
     from rag.chunking.base import Chunk
@@ -83,6 +112,7 @@ def test_build_pipeline_cloud_mode_uses_cloud_dense_and_extractive(tmp_path) -> 
     index.save(bm25_path)
 
     settings = Settings(
+        deployment_profile="render_free",
         retrieval_mode="cloud_dense_sparse",
         answer_mode="extractive",
         qdrant_url="https://example.cloud.qdrant.io:6333",
