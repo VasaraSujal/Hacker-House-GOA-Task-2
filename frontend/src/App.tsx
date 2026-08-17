@@ -2,10 +2,12 @@ import { useCallback, useEffect, useState } from 'react'
 import { FiAlertCircle, FiArrowRight, FiRefreshCw } from 'react-icons/fi'
 import { getHealth, submitVoiceQuery } from './api/ragApi'
 import { AnswerPanel } from './components/AnswerPanel'
+import { EvidenceCard } from './components/EvidenceCard'
 import { Header } from './components/Header'
 import { LatencyPanel } from './components/LatencyPanel'
+import { PipelineStrip } from './components/PipelineStrip'
 import { ProcessingState } from './components/ProcessingState'
-import { SourceList } from './components/SourceList'
+import { RequestMeta } from './components/RequestMeta'
 import { VoiceRecorder } from './components/VoiceRecorder'
 import { useVoiceRecorder } from './hooks/useVoiceRecorder'
 import type { ExperienceState, VoiceRagResponse } from './types/rag'
@@ -60,7 +62,7 @@ function App() {
   }, [recorder.isRecording])
 
   return (
-    <div className="min-h-screen bg-[#06090f] text-slate-200">
+    <div className="min-h-screen overflow-x-hidden bg-[#06090f] text-slate-200">
       <div className="noise-layer" aria-hidden="true" />
       <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
         <Header connected={connected} />
@@ -74,7 +76,7 @@ function App() {
               </h2>
             </div>
             <p className="max-w-sm text-sm leading-6 text-slate-500">
-              ElevenLabs speech recognition meets hybrid retrieval and transparent grounding. Every result shows its sources and real request latency.
+              ElevenLabs speech recognition meets hybrid retrieval and transparent grounding. Every result shows measured latency, grounding status, and compact evidence.
             </p>
           </div>
 
@@ -94,7 +96,7 @@ function App() {
             <section className="mt-5 flex flex-col gap-4 rounded-2xl border border-rose-300/15 bg-rose-300/5 p-5 sm:flex-row sm:items-center" role="alert">
               <FiAlertCircle className="size-6 shrink-0 text-rose-300" aria-hidden="true" />
               <div className="flex-1">
-                <p className="font-medium text-rose-100">Something went wrong</p>
+                <p className="font-medium text-rose-100">Something went wrong while processing your request.</p>
                 <p className="mt-1 text-sm text-rose-200/65">{error}</p>
               </div>
               <button type="button" onClick={start} className="secondary-button">
@@ -106,17 +108,21 @@ function App() {
           {state === 'processing' && <div className="mt-5"><ProcessingState /></div>}
 
           {result && (state === 'success' || state === 'refused') && (
-            <div className="mt-6 grid items-start gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)]">
-              <div className="min-w-0 space-y-5">
-                <AnswerPanel result={result} />
-                <SourceList sources={result.sources} />
+            <div className="mt-6 space-y-5">
+              <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.45fr)_minmax(280px,0.75fr)]">
+                <div className="min-w-0">
+                  <AnswerPanel result={result} />
+                </div>
+                <div className="min-w-0 space-y-5 lg:sticky lg:top-5">
+                  <LatencyPanel latency={result.latency} />
+                  <button type="button" onClick={start} className="primary-button w-full">
+                    Ask another question <FiArrowRight aria-hidden="true" />
+                  </button>
+                </div>
               </div>
-              <div className="min-w-0 space-y-5 lg:sticky lg:top-5">
-                <LatencyPanel latency={result.latency} />
-                <button type="button" onClick={start} className="primary-button w-full">
-                  Ask another question <FiArrowRight aria-hidden="true" />
-                </button>
-              </div>
+              <PipelineStrip latency={result.latency} />
+              <EvidenceCard result={result} />
+              <RequestMeta result={result} />
             </div>
           )}
 
