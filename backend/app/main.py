@@ -49,6 +49,18 @@ def create_app(*, load_pipeline: bool = True) -> FastAPI:
     def _startup() -> None:
         if not load_pipeline:
             return
+        cloud_mode = settings.retrieval_mode == "cloud_dense_sparse"
+        logger.info(
+            "Runtime configuration",
+            extra={
+                "deployment_profile": settings.deployment_profile,
+                "retrieval_mode": settings.retrieval_mode,
+                "answer_mode": settings.answer_mode,
+                "qdrant_collection": settings.qdrant_collection,
+                "embedding_provider": "qdrant_cloud" if cloud_mode else "local",
+                "local_embedding_model_loaded": False,
+            },
+        )
         production = settings.app_env.lower() == "production"
         pipeline = build_pipeline(settings) if production else try_build_pipeline(settings)
         app.state.pipeline = pipeline
