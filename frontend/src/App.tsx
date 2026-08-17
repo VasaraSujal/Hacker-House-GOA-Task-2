@@ -120,7 +120,7 @@ function App() {
                   </button>
                 </div>
               </div>
-              <PipelineStrip latency={result.latency} />
+              <PipelineStrip />
               <EvidenceCard result={result} />
               <RequestMeta result={result} />
             </div>
