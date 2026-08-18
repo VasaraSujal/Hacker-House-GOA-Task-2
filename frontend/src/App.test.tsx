@@ -2,12 +2,13 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { getHealth, submitVoiceQuery } from './api/ragApi'
+import { getHealth, submitVoiceQuery, warmupRag } from './api/ragApi'
 import type { VoiceRagResponse } from './types/rag'
 
 vi.mock('./api/ragApi', () => ({
   getHealth: vi.fn(),
   submitVoiceQuery: vi.fn(),
+  warmupRag: vi.fn(),
 }))
 
 const response = (refused = false): VoiceRagResponse => ({
@@ -61,7 +62,15 @@ describe('voice experience', () => {
       elevenlabs_configured: true,
       stt_configured: true,
     })
+    vi.mocked(warmupRag).mockResolvedValue({
+      status: 'ready',
+      warmup_ms: 100,
+      qdrant: 'ok',
+      bm25: 'ok',
+      retrieval_mode: 'cloud_dense_sparse',
+    })
   })
+
 
   it('moves through recording and renders a grounded result', async () => {
     vi.mocked(submitVoiceQuery).mockResolvedValue(response())
