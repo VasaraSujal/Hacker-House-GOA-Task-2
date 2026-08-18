@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { FiAlertCircle, FiArrowRight, FiRefreshCw } from 'react-icons/fi'
-import { getHealth, submitVoiceQuery } from './api/ragApi'
+import { getHealth, submitVoiceQuery, warmupRag } from './api/ragApi'
 import { AnswerPanel } from './components/AnswerPanel'
 import { EvidenceCard } from './components/EvidenceCard'
 import { Header } from './components/Header'
@@ -10,22 +10,41 @@ import { ProcessingState } from './components/ProcessingState'
 import { RequestMeta } from './components/RequestMeta'
 import { VoiceRecorder } from './components/VoiceRecorder'
 import { useVoiceRecorder } from './hooks/useVoiceRecorder'
-import type { ExperienceState, VoiceRagResponse } from './types/rag'
+import type { ExperienceState, SystemStatus, VoiceRagResponse } from './types/rag'
 
 function App() {
   const [state, setState] = useState<ExperienceState>('idle')
   const [result, setResult] = useState<VoiceRagResponse | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [connected, setConnected] = useState<boolean | null>(null)
+  const [systemStatus, setSystemStatus] = useState<SystemStatus>('preparing')
 
-  const checkHealth = useCallback(() => {
-    setConnected(null)
-    getHealth()
-      .then((health) => setConnected(health.status === 'ok' && health.stt_configured))
-      .catch(() => setConnected(false))
+  useEffect(() => {
+    let mounted = true
+    async function initialize() {
+      try {
+        setSystemStatus('warming')
+        const health = await getHealth()
+        if (!mounted) return
+        if (health.status === 'ok') {
+          try {
+            await warmupRag()
+            if (mounted) setSystemStatus('ready')
+          } catch {
+            if (mounted) setSystemStatus('ready')
+          }
+        } else {
+          if (mounted) setSystemStatus('degraded')
+        }
+      } catch {
+        if (mounted) setSystemStatus('unavailable')
+      }
+    }
+    initialize()
+    return () => {
+      mounted = false
+    }
   }, [])
 
-  useEffect(checkHealth, [checkHealth])
 
   const handleRecording = useCallback(async (blob: Blob) => {
     setState('processing')
@@ -65,7 +84,7 @@ function App() {
     <div className="min-h-screen overflow-x-hidden bg-[#06090f] text-slate-200">
       <div className="noise-layer" aria-hidden="true" />
       <div className="relative mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-        <Header connected={connected} />
+        <Header status={systemStatus} />
 
         <main className="py-8 sm:py-12">
           <div className="mb-8 grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
