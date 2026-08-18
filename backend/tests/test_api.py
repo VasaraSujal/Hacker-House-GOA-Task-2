@@ -167,3 +167,22 @@ def test_voice_query_rate_limit_returns_429() -> None:
     assert first.status_code == 200
     assert second.status_code == 429
     assert second.json()["detail"]["code"] == "voice_rate_limited"
+
+
+def test_rag_warmup_success() -> None:
+    client = _client()
+    response = client.get("/api/rag/warmup")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] in {"ready", "degraded"}
+    assert body["qdrant"] == "ok"
+    assert body["bm25"] == "ok"
+    assert "warmup_ms" in body
+
+
+def test_rag_warmup_uninitialized() -> None:
+    app = create_app(load_pipeline=False)
+    client = TestClient(app)
+    response = client.get("/api/rag/warmup")
+    assert response.status_code == 503
+
