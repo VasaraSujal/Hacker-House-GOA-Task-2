@@ -36,7 +36,8 @@ async function testVoiceFlows() {
   })
 
   await page.goto(VERCEL_URL, { waitUntil: 'networkidle' })
-  await page.getByText('Backend connected', { exact: true }).waitFor({ timeout: 15000 })
+  await page.locator('header').getByText(/(System ready|Backend connected)/).first().waitFor({ timeout: 15000 })
+
 
   async function record(isFirst = false) {
     if (isFirst) {
