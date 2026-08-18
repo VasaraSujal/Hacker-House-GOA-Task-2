@@ -73,7 +73,16 @@ class HealthResponse(BaseModel):
     stt_configured: bool
 
 
+class WarmupResponse(BaseModel):
+    status: str
+    warmup_ms: float
+    qdrant: str
+    bm25: str
+    retrieval_mode: str
+
+
 class ErrorResponse(BaseModel):
     error: str
     code: str
     detail: str | None = None
+
