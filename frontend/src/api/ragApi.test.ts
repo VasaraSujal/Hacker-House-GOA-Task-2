@@ -69,3 +69,26 @@ describe('submitVoiceQuery', () => {
     } satisfies Partial<ApiError>)
   })
 })
+
+describe('warmupRag', () => {
+  it('calls /api/rag/warmup and returns readiness status', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: 'ready',
+          warmup_ms: 150.5,
+          qdrant: 'ok',
+          bm25: 'ok',
+          retrieval_mode: 'cloud_dense_sparse',
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } },
+      ),
+    )
+
+    const result = await (await import('./ragApi')).warmupRag()
+    expect(fetchMock).toHaveBeenCalledWith(expect.stringContaining('/api/rag/warmup'))
+    expect(result.status).toBe('ready')
+    expect(result.qdrant).toBe('ok')
+  })
+})
+
