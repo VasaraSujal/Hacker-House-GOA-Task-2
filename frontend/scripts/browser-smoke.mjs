@@ -63,7 +63,7 @@ async function runVoiceCase({ audioFile, expectedTranscript, expectedState, scre
   }
 
   await page.goto(frontendUrl)
-  await page.getByText('Backend connected', { exact: true }).waitFor({ timeout: 15_000 })
+  await page.locator('header').getByText(/(System ready|Backend connected)/).first().waitFor({ timeout: 15_000 })
   await ask(true)
   if (repeat) await ask(false)
 
@@ -84,8 +84,8 @@ async function runVoiceCase({ audioFile, expectedTranscript, expectedState, scre
       })),
   }))
   const noOverflow = overflow.scrollWidth <= overflow.clientWidth
-  const sourceCountText = await page.getByText(/\d+ chunks/).innerText()
-  const performanceVisible = await page.getByText('Request performance', { exact: true }).isVisible()
+  const sourceCountText = await page.getByText(/\d+ retrieved passage/).innerText()
+  const performanceVisible = await page.getByText('RAG latency', { exact: true }).first().isVisible()
   await page.screenshot({ path: path.join(projectRoot, 'benchmarks', screenshot), fullPage: true })
   await browser.close()
 
