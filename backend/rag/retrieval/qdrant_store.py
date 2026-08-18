@@ -38,6 +38,7 @@ class QdrantStore:
     @staticmethod
     def _connect(url: str, api_key: str | None, timeout: float, *, cloud_inference: bool = False):
         try:
+            import httpx
             from qdrant_client import QdrantClient
         except ImportError as exc:
             raise VectorStoreError("qdrant-client is not installed") from exc
@@ -47,6 +48,11 @@ class QdrantStore:
                 "api_key": api_key or None,
                 "timeout": timeout,
                 "check_compatibility": False,
+                "limits": httpx.Limits(
+                    max_keepalive_connections=20,
+                    max_connections=50,
+                    keepalive_expiry=300.0,
+                ),
             }
             # cloud_inference is only meaningful against Qdrant Cloud clusters.
             if cloud_inference:
