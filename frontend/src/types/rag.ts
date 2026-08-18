@@ -48,6 +48,21 @@ export interface HealthResponse {
   stt_configured: boolean
 }
 
+export interface WarmupResponse {
+  status: string
+  warmup_ms: number
+  qdrant: string
+  bm25: string
+  retrieval_mode: string
+}
+
+export type SystemStatus =
+  | 'preparing'
+  | 'warming'
+  | 'ready'
+  | 'degraded'
+  | 'unavailable'
+
 export type ExperienceState =
   | 'idle'
   | 'recording'
@@ -55,3 +70,4 @@ export type ExperienceState =
   | 'success'
   | 'refused'
   | 'error'
+
