@@ -1,6 +1,7 @@
-import type { HealthResponse, VoiceRagResponse } from '../types/rag'
+import type { HealthResponse, VoiceRagResponse, WarmupResponse } from '../types/rag'
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000').replace(/\/$/, '')
+
 
 export class ApiError extends Error {
   readonly status: number
@@ -64,3 +65,10 @@ export async function getHealth(): Promise<HealthResponse> {
   if (!response.ok) throw await parseError(response)
   return response.json() as Promise<HealthResponse>
 }
+
+export async function warmupRag(): Promise<WarmupResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/rag/warmup`)
+  if (!response.ok) throw await parseError(response)
+  return response.json() as Promise<WarmupResponse>
+}
+
