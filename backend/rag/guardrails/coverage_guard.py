@@ -3,41 +3,8 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass
 
-from rag.retrieval.bm25 import tokenize
+from rag.retrieval.bm25 import extract_content_tokens, tokenize
 from rag.retrieval.types import RetrievalResult
-
-_STOP = {
-    "a",
-    "an",
-    "the",
-    "is",
-    "are",
-    "was",
-    "were",
-    "be",
-    "to",
-    "of",
-    "in",
-    "on",
-    "for",
-    "and",
-    "or",
-    "who",
-    "what",
-    "when",
-    "where",
-    "why",
-    "how",
-    "did",
-    "does",
-    "do",
-    "won",
-    "yesterday",
-    "today",
-    "tomorrow",
-    "match",
-    "game",
-}
 
 _NON_LATIN_NON_DEVA = re.compile(
     r"[\u0A80-\u0AFF\u0980-\u09FF\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F\u0A00-\u0A7F\u0B00-\u0B7F\u0600-\u06FF]"
@@ -65,7 +32,7 @@ class LexicalCoverageGuard:
         self,
         min_overlap: float = 0.34,
         min_content_tokens: int = 1,
-        min_cross_script_dense_score: float = 0.52,
+        min_cross_script_dense_score: float = 0.845,
     ) -> None:
         self.min_overlap = min_overlap
         self.min_content_tokens = min_content_tokens
@@ -77,7 +44,7 @@ class LexicalCoverageGuard:
         results: list[RetrievalResult],
         dense_results: list[RetrievalResult] | None = None,
     ) -> CoverageResult:
-        query_tokens = {t for t in tokenize(query) if t not in _STOP and len(t) > 2}
+        query_tokens = extract_content_tokens(query, min_length=2)
         if len(query_tokens) < self.min_content_tokens:
             return CoverageResult(False, 0.0, "query has insufficient content tokens")
         if not results:
