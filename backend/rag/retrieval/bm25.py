@@ -17,10 +17,111 @@ logger = logging.getLogger(__name__)
 
 _TOKEN_RE = re.compile(r"[^\s,.;:!?।॥؟\"'()\[\]{}]+", re.UNICODE)
 
+STOPWORDS: set[str] = {
+    # English stopwords & question words
+    "a",
+    "an",
+    "the",
+    "is",
+    "are",
+    "was",
+    "were",
+    "be",
+    "to",
+    "of",
+    "in",
+    "on",
+    "for",
+    "and",
+    "or",
+    "who",
+    "what",
+    "when",
+    "where",
+    "why",
+    "how",
+    "did",
+    "does",
+    "do",
+    "won",
+    "yesterday",
+    "today",
+    "tomorrow",
+    "match",
+    "game",
+    # Hindi question words & auxiliary/grammatical particles
+    "क्या",
+    "है",
+    "हैं",
+    "था",
+    "थी",
+    "थे",
+    "का",
+    "की",
+    "के",
+    "में",
+    "से",
+    "को",
+    "पर",
+    "और",
+    "या",
+    "जो",
+    "यह",
+    "वह",
+    "एक",
+    "ने",
+    "हो",
+    "होता",
+    "होती",
+    "होते",
+    "कि",
+    "लिए",
+    "कहाँ",
+    "कहा",
+    "क्यों",
+    "कैसे",
+    "किसने",
+    "किस",
+    "किसे",
+    # Gujarati question words & auxiliary/grammatical particles
+    "શું",
+    "છે",
+    "હતું",
+    "હતા",
+    "ના",
+    "ની",
+    "નું",
+    "ને",
+    "માં",
+    "થી",
+    "અને",
+    "કે",
+    "ક્યાં",
+    "કેમ",
+    "કોણ",
+    "કોણે",
+    "ક્યારે",
+}
+
 
 def tokenize(text: str) -> list[str]:
     """Whitespace/punctuation tokenizer that keeps Indic grapheme sequences intact."""
     return [t.lower() for t in _TOKEN_RE.findall(text or "") if t]
+
+
+def extract_content_tokens(text_or_tokens: str | Sequence[str], min_length: int = 2) -> set[str]:
+    """Return content tokens filtered of generic multilingual stopwords.
+
+    If filtering removes all tokens, falls back to the original non-empty tokens.
+    """
+    if isinstance(text_or_tokens, str):
+        tokens = tokenize(text_or_tokens)
+    else:
+        tokens = [t.lower() for t in text_or_tokens if t]
+    content = {t for t in tokens if t not in STOPWORDS and len(t) >= min_length}
+    if content:
+        return content
+    return {t for t in tokens if len(t) >= min_length} or set(tokens)
 
 
 class BM25Index:
