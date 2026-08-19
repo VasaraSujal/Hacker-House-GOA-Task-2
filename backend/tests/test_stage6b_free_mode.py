@@ -149,3 +149,41 @@ def test_cloud_dense_search_delegates_to_inference_store() -> None:
     )
     assert out.results[0].chunk_id == "c1"
     assert out.embedding_ms >= 0.0
+
+
+def test_lexical_coverage_cross_script_passes_with_dense_confidence() -> None:
+    from rag.guardrails.coverage_guard import LexicalCoverageGuard
+
+    guard = LexicalCoverageGuard(min_overlap=0.34, min_cross_script_dense_score=0.52)
+    # Gujarati query with English context
+    results = [RetrievalResult("A corporation is an incorporated legal entity.", 0.016, "d1", "c1")]
+    dense_results = [RetrievalResult("A corporation is an incorporated legal entity.", 0.69, "d1", "c1")]
+    cov = guard.check(". શું એક કોર્પોરેશન છે?", results, dense_results=dense_results)
+    assert cov.ok is True
+    assert cov.reason == "cross_script_semantic_match"
+
+
+def test_lexical_coverage_cross_script_refuses_weak_dense() -> None:
+    from rag.guardrails.coverage_guard import LexicalCoverageGuard
+
+    guard = LexicalCoverageGuard(min_overlap=0.34, min_cross_script_dense_score=0.52)
+    # Gujarati off-topic query with weak dense score
+    results = [RetrievalResult("Unrelated sports scores and news.", 0.016, "d1", "c1")]
+    dense_results = [RetrievalResult("Unrelated sports scores and news.", 0.42, "d1", "c1")]
+    cov = guard.check("ગઈકાલની ક્રિકેટ મેચ કોણ જીત્યું?", results, dense_results=dense_results)
+    assert cov.ok is False
+    assert "insufficient cross-script dense confidence" in (cov.reason or "")
+
+
+def test_extractive_answer_cross_script_generates_from_top_context() -> None:
+    context = (
+        "[Source 1]\nDocument ID: d1\nChunk ID: c1\n"
+        "Text:\nA corporation is a company authorized to act as a single legal entity.\n\n"
+        "[Source 2]\nDocument ID: d2\nChunk ID: c2\n"
+        "Text:\nUnrelated weather systems move across the ocean daily."
+    )
+    prompt = build_user_prompt(". શું એક કોર્પોરેશન છે?", context)
+    result = ExtractiveAnswerProvider(max_sentences=2).generate(prompt)
+    assert "corporation" in result.text.lower()
+    assert result.text != REFUSAL_MESSAGE
+
