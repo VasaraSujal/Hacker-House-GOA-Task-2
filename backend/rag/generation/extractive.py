@@ -10,6 +10,10 @@ from rag.retrieval.bm25 import tokenize
 
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?।])\s+|\n+")
 
+_NON_LATIN_NON_DEVA = re.compile(
+    r"[\u0A80-\u0AFF\u0980-\u09FF\u0B80-\u0BFF\u0C00-\u0C7F\u0C80-\u0CFF\u0D00-\u0D7F\u0A00-\u0A7F\u0B00-\u0B7F\u0600-\u06FF]"
+)
+
 
 def _split_sentences(text: str) -> list[str]:
     parts = [p.strip() for p in _SENTENCE_SPLIT.split(text) if p and p.strip()]
@@ -40,7 +44,8 @@ class ExtractiveAnswerProvider(LLMProvider):
         query, context = self._parse_prompt(prompt)
         query_tokens = set(tokenize(query))
         scored: list[tuple[float, str]] = []
-        for block in self._context_blocks(context):
+        blocks = self._context_blocks(context)
+        for block in blocks:
             for sentence in _split_sentences(block):
                 score = _overlap_score(query_tokens, sentence)
                 if score >= self.min_overlap:
@@ -56,6 +61,19 @@ class ExtractiveAnswerProvider(LLMProvider):
             selected.append(sentence)
             if len(selected) >= self.max_sentences:
                 break
+
+        # Cross-script fallback: if no sentence had lexical token overlap (e.g. query in Gujarati,
+        # context in English/Hindi), but context was retrieved and verified by the guardrails,
+        # extract the top sentences from the highest-ranked context block.
+        if not selected and blocks and _NON_LATIN_NON_DEVA.search(query):
+            for sentence in _split_sentences(blocks[0]):
+                key = sentence.casefold()
+                if key not in seen:
+                    seen.add(key)
+                    selected.append(sentence)
+                if len(selected) >= self.max_sentences:
+                    break
+
         if not selected:
             text = REFUSAL_MESSAGE
         else:
