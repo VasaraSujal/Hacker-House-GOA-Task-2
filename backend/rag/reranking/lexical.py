@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from rag.reranking.base import Reranker
-from rag.retrieval.bm25 import tokenize
+from rag.retrieval.bm25 import extract_content_tokens, tokenize
 from rag.retrieval.types import RetrievalResult
 
 
@@ -14,7 +14,7 @@ class LexicalLightReranker(Reranker):
         candidates: list[RetrievalResult],
         top_k: int,
     ) -> list[RetrievalResult]:
-        query_tokens = set(tokenize(query))
+        query_tokens = extract_content_tokens(query)
         scored: list[RetrievalResult] = []
         for candidate in candidates:
             cand_tokens = set(tokenize(candidate.text))
