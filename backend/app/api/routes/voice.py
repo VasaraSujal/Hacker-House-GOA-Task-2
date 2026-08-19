@@ -91,11 +91,26 @@ def voice_query(
         raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Voice RAG is not initialized")
 
     try:
+        # Concurrently prime/keep-alive the Qdrant Cloud connection while ElevenLabs STT executes.
+        prewarm_future = None
+        if hasattr(pipeline, "hybrid") and hasattr(pipeline.hybrid, "dense") and hasattr(pipeline.hybrid, "_executor"):
+            try:
+                prewarm_future = pipeline.hybrid._executor.submit(
+                    pipeline.hybrid.dense.search, "warmup", 1
+                )
+            except Exception:
+                pass
+
         transcript = stt.transcribe(
             audio_bytes,
             filename=audio.filename or "audio",
             content_type=audio.content_type or "application/octet-stream",
         )
+        if prewarm_future is not None:
+            try:
+                prewarm_future.result(timeout=5.0)
+            except Exception:
+                pass
         transcript_validation_started = time.perf_counter()
         # Reuse exactly the existing input validation policy before retrieval.
         pipeline.input_guard.validate(transcript.text)
