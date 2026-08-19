@@ -110,7 +110,7 @@ class RAGPipeline:
             )
 
         if (self.settings.answer_mode or "").lower() == "extractive":
-            coverage = self.coverage_guard.check(cleaned, hybrid_out.results)
+            coverage = self.coverage_guard.check(cleaned, hybrid_out.results, dense_results=hybrid_out.dense)
             if not coverage.ok:
                 pipeline_ms = (time.perf_counter() - t_all) * 1000
                 total_ms = request_parsing_ms + pipeline_ms
