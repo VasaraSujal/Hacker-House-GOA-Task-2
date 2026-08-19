@@ -5,7 +5,7 @@ import time
 
 from rag.generation.base import GenerationResult, LLMProvider
 from rag.generation.prompts import REFUSAL_MESSAGE
-from rag.retrieval.bm25 import tokenize
+from rag.retrieval.bm25 import extract_content_tokens, tokenize
 
 
 _SENTENCE_SPLIT = re.compile(r"(?<=[.!?।])\s+|\n+")
@@ -42,7 +42,7 @@ class ExtractiveAnswerProvider(LLMProvider):
         del system_prompt
         started = time.perf_counter()
         query, context = self._parse_prompt(prompt)
-        query_tokens = set(tokenize(query))
+        query_tokens = extract_content_tokens(query)
         scored: list[tuple[float, str]] = []
         blocks = self._context_blocks(context)
         for block in blocks:
