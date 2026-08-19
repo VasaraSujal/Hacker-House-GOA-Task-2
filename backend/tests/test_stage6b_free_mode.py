@@ -187,3 +187,18 @@ def test_extractive_answer_cross_script_generates_from_top_context() -> None:
     assert "corporation" in result.text.lower()
     assert result.text != REFUSAL_MESSAGE
 
+
+def test_code_mixed_hinglish_reranking_and_extraction() -> None:
+    context = (
+        "[Source 1]\nDocument ID: d1\nChunk ID: c1\n"
+        "Text:\nA corporation is a company or group authorized to act as a single legal entity.\n\n"
+        "[Source 2]\nDocument ID: d2\nChunk ID: c2\n"
+        "Text:\nअब क्या चलन में है। यहाँ क्या हो रहा है।"
+    )
+    prompt = build_user_prompt("Corporation क्या है?", context)
+    result = ExtractiveAnswerProvider(max_sentences=2).generate(prompt)
+    assert "corporation" in result.text.lower()
+    assert "चलन" not in result.text
+    assert result.text != REFUSAL_MESSAGE
+
+
